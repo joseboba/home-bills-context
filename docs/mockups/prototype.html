@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>GastosApp — Prototipo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green-50: #F0FDF4;
+  --green-100: #DCFCE7;
+  --green-400: #4ADE80;
+  --green-500: #22C55E;
+  --green-600: #16A34A;
+  --green-700: #15803D;
+  --red-400: #F87171;
+  --red-500: #EF4444;
+  --amber-400: #FBBF24;
+
+  /* Light */
+  --bg: #F8FAFC;
+  --bg2: #F1F5F9;
+  --surface: #FFFFFF;
+  --surface2: #F8FAFC;
+  --border: #E2E8F0;
+  --border2: #CBD5E1;
+  --text1: #0F172A;
+  --text2: #475569;
+  --text3: #94A3B8;
+  --primary: #22C55E;
+  --primary-light: #DCFCE7;
+  --primary-dark: #16A34A;
+  --danger: #EF4444;
+  --danger-light: #FEE2E2;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 40px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.06);
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --font: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
+}
+
+[data-theme="dark"] {
+  --bg: #0B1120;
+  --bg2: #111827;
+  --surface: #1A2235;
+  --surface2: #1E293B;
+  --border: #1E293B;
+  --border2: #334155;
+  --text1: #F1F5F9;
+  --text2: #94A3B8;
+  --text3: #475569;
+  --primary-light: #14532D;
+  --danger-light: #450A0A;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.3);
+  --shadow-lg: 0 10px 40px rgba(0,0,0,0.4);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: var(--font);
+  background: #1a1a2e;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* ── Phone shell ── */
+.phone-shell {
+  width: 390px;
+  height: 844px;
+  background: var(--surface);
+  border-radius: 48px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 0 0 10px #1a1a1a, 0 0 0 12px #333, 0 30px 80px rgba(0,0,0,0.6);
+  flex-shrink: 0;
+}
+
+/* Notch */
+.notch {
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 126px; height: 34px;
+  background: #1a1a1a;
+  border-radius: 0 0 20px 20px;
+  z-index: 100;
+}
+
+/* ── Controls outside phone ── */
+.controls {
+  margin-left: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ctrl-btn {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #fff;
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-family: var(--font);
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+.ctrl-btn:hover { background: rgba(255,255,255,0.14); }
+.ctrl-btn.active { background: #22C55E22; border-color: #22C55E66; color: #4ADE80; }
+
+.ctrl-label {
+  color: rgba(255,255,255,0.35);
+  font-family: var(--font);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  margin-top: 8px;
+}
+
+/* ── App container ── */
+#app {
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
+  overflow: hidden;
+  position: relative;
+  color: var(--text1);
+  transition: background 0.3s;
+}
+
+/* ── Screens ── */
+.screen {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  background: var(--bg);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.screen.active { display: flex; animation: slideIn 0.3s cubic-bezier(.4,0,.2,1); }
+.screen.back    { animation: slideBack 0.3s cubic-bezier(.4,0,.2,1); }
+
+@keyframes slideIn   { from { transform: translateX(100%); opacity:0 } to { transform: translateX(0); opacity:1 } }
+@keyframes slideBack { from { transform: translateX(-30%); opacity:0 } to { transform: translateX(0); opacity:1 } }
+
+/* ── Status bar ── */
+.status-bar {
+  height: 44px;
+  padding: 10px 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  background: var(--bg);
+}
+.status-time { font-size: 15px; font-weight: 600; color: var(--text1); }
+.status-icons { display: flex; gap: 6px; align-items: center; }
+.status-icons span { font-size: 13px; color: var(--text1); }
+
+/* ── Top nav ── */
+.top-nav {
+  padding: 8px 20px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  background: var(--bg);
+}
+.back-btn {
+  width: 36px; height: 36px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+}
+.nav-title { font-size: 18px; font-weight: 700; color: var(--text1); flex: 1; }
+.nav-action {
+  width: 36px; height: 36px;
+  background: var(--primary);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  box-shadow: 0 2px 8px rgba(34,197,94,0.35);
+}
+
+/* ── Bottom nav ── */
+.bottom-nav {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 80px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: flex;
+  padding: 8px 0 16px;
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.nav-item .nav-icon { font-size: 22px; }
+.nav-item .nav-label { font-size: 10px; font-weight: 500; color: var(--text3); }
+.nav-item.active .nav-label { color: var(--primary); }
+.nav-item.active .nav-icon { transform: scale(1.1); }
+
+.fab {
+  width: 56px; height: 56px;
+  background: var(--primary);
+  border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px;
+  margin-top: -16px;
+  box-shadow: 0 4px 16px rgba(34,197,94,0.4);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.fab:active { transform: scale(0.94); }
+
+/* ── Scrollable content area with bottom nav ── */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 90px;
+}
+.content-pad { padding: 0 20px; }
+
+/* ── Cards ── */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+
+/* ── ════════════════════════════════════════
+   SCREEN: LOGIN
+   ════════════════════════════════════════ ── */
+#screen-login {
+  background: var(--bg);
+  justify-content: center;
+  padding: 44px 28px 40px;
+}
+
+.login-blob-1 {
+  position: absolute;
+  width: 280px; height: 280px;
+  background: radial-gradient(circle, rgba(34,197,94,0.15) 0%, transparent 70%);
+  top: -60px; left: -60px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.login-blob-2 {
+  position: absolute;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(34,197,94,0.10) 0%, transparent 70%);
+  bottom: 100px; right: -40px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.login-logo-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  margin-bottom: 40px;
+  animation: fadeUp 0.6s ease both;
+}
+.login-logo {
+  width: 80px; height: 80px;
+  background: linear-gradient(135deg, #22C55E, #16A34A);
+  border-radius: 24px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 38px;
+  box-shadow: 0 8px 32px rgba(34,197,94,0.35);
+  margin-bottom: 16px;
+}
+.login-app-name {
+  font-size: 28px; font-weight: 700; color: var(--text1);
+  letter-spacing: -0.5px;
+}
+.login-tagline {
+  font-size: 13px; color: var(--text3); margin-top: 4px; text-align: center;
+}
+
+.login-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
+  animation: fadeUp 0.6s 0.1s ease both;
+}
+.login-card-title { font-size: 20px; font-weight: 700; color: var(--text1); margin-bottom: 4px; }
+.login-card-sub { font-size: 13px; color: var(--text3); margin-bottom: 24px; }
+
+.field-label { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; letter-spacing: 0.3px; }
+.field-input {
+  width: 100%; height: 52px;
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0 16px;
+  font-family: var(--font);
+  font-size: 15px;
+  color: var(--text1);
+  outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 16px;
+}
+.field-input:focus { border-color: var(--primary); }
+.field-input::placeholder { color: var(--text3); }
+
+.btn-primary {
+  width: 100%; height: 54px;
+  background: linear-gradient(135deg, #22C55E, #16A34A);
+  border: none; border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-size: 16px; font-weight: 600;
+  color: #fff; cursor: pointer;
+  box-shadow: 0 4px 16px rgba(34,197,94,0.35);
+  transition: transform 0.15s, box-shadow 0.15s;
+  margin-top: 4px;
+}
+.btn-primary:active { transform: scale(0.97); box-shadow: 0 2px 8px rgba(34,197,94,0.25); }
+
+.login-footer { text-align: center; margin-top: 24px; animation: fadeUp 0.6s 0.2s ease both; }
+.login-footer span { font-size: 12px; color: var(--text3); }
+
+/* ── ════════════════════════════════════════
+   SCREEN: BALANCE (HOME)
+   ════════════════════════════════════════ ── */
+.home-header {
+  padding: 8px 20px 20px;
+  background: var(--bg);
+}
+.home-greeting { font-size: 13px; color: var(--text3); margin-bottom: 2px; }
+.home-name { font-size: 22px; font-weight: 700; color: var(--text1); }
+
+.balance-card {
+  margin: 0 20px 20px;
+  background: linear-gradient(135deg, #16A34A 0%, #15803D 100%);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(22,163,74,0.35);
+}
+.balance-card::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 200px; height: 200px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 50%;
+}
+.balance-card::after {
+  content: '';
+  position: absolute;
+  bottom: -30px; left: 20px;
+  width: 120px; height: 120px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 50%;
+}
+.balance-label { font-size: 12px; opacity: 0.75; letter-spacing: 0.5px; margin-bottom: 6px; }
+.balance-amount { font-size: 38px; font-weight: 700; letter-spacing: -1px; line-height: 1; margin-bottom: 4px; }
+.balance-sub { font-size: 13px; opacity: 0.75; margin-bottom: 20px; }
+.balance-currencies { display: flex; gap: 12px; }
+.currency-chip {
+  background: rgba(255,255,255,0.15);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px; font-weight: 600;
+}
+.currency-chip span { opacity: 0.75; font-weight: 400; margin-right: 4px; }
+
+.section-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 20px;
+  margin-bottom: 12px;
+}
+.section-title { font-size: 16px; font-weight: 700; color: var(--text1); }
+.section-link { font-size: 13px; color: var(--primary); font-weight: 500; cursor: pointer; }
+
+.quick-actions {
+  display: flex; gap: 12px;
+  padding: 0 20px;
+  margin-bottom: 24px;
+}
+.quick-action {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.15s;
+}
+.quick-action:active { transform: scale(0.96); }
+.qa-icon { font-size: 24px; }
+.qa-label { font-size: 11px; font-weight: 600; color: var(--text2); text-align: center; }
+
+/* Movement list */
+.movement-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.movement-item:active { background: var(--surface2); }
+.movement-icon {
+  width: 44px; height: 44px;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.movement-icon.green { background: var(--primary-light); }
+.movement-icon.red   { background: var(--danger-light); }
+.movement-icon.gray  { background: var(--bg2); }
+.movement-info { flex: 1; }
+.movement-name { font-size: 15px; font-weight: 600; color: var(--text1); margin-bottom: 2px; }
+.movement-meta { font-size: 12px; color: var(--text3); }
+.movement-right { text-align: right; }
+.movement-amount { font-size: 15px; font-weight: 700; }
+.movement-amount.positive { color: var(--primary); }
+.movement-amount.negative { color: var(--danger); }
+.movement-amount.neutral  { color: var(--text2); }
+.movement-period { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+.period-divider {
+  padding: 10px 20px 6px;
+  font-size: 11px; font-weight: 700;
+  color: var(--text3);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── ════════════════════════════════════════
+   SCREEN: AGREGAR GASTO
+   ════════════════════════════════════════ ── */
+.method-selector {
+  display: flex;
+  margin: 0 20px 20px;
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  border: 1px solid var(--border);
+}
+.method-option {
+  flex: 1; padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 13px; font-weight: 600;
+  color: var(--text3);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.method-option.active {
+  background: var(--surface);
+  color: var(--text1);
+  box-shadow: var(--shadow-sm);
+}
+
+.ocr-zone {
+  margin: 0 20px 20px;
+  height: 160px;
+  background: var(--surface2);
+  border: 2px dashed var(--border2);
+  border-radius: var(--radius-md);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 8px; cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.ocr-zone:active { border-color: var(--primary); background: var(--primary-light); }
+.ocr-zone-icon { font-size: 36px; }
+.ocr-zone-label { font-size: 14px; font-weight: 600; color: var(--text2); }
+.ocr-zone-sub { font-size: 12px; color: var(--text3); }
+
+.form-section { padding: 0 20px; margin-bottom: 20px; }
+.form-row { display: flex; gap: 12px; }
+.form-row .form-field { flex: 1; }
+
+.form-field { margin-bottom: 16px; }
+
+.payer-selector {
+  display: flex; gap: 10px;
+  margin-bottom: 16px;
+}
+.payer-option {
+  flex: 1; padding: 12px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  text-align: center; cursor: pointer;
+  transition: all 0.2s;
+}
+.payer-option.active {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+.payer-option .payer-avatar { font-size: 24px; display: block; margin-bottom: 4px; }
+.payer-option .payer-name { font-size: 12px; font-weight: 600; color: var(--text2); }
+.payer-option.active .payer-name { color: var(--primary-dark); }
+
+/* Items list */
+.items-list { padding: 0 20px; margin-bottom: 16px; }
+.item-row {
+  display: flex; gap: 8px; align-items: center;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+}
+.item-row-info { flex: 1; }
+.item-row-name { font-size: 14px; font-weight: 600; color: var(--text1); }
+.item-row-meta { font-size: 11px; color: var(--text3); }
+.item-row-amount { font-size: 14px; font-weight: 700; color: var(--text1); font-family: var(--mono); }
+.item-debt-badge {
+  font-size: 10px; font-weight: 600;
+  padding: 3px 8px; border-radius: 20px;
+  background: var(--primary-light); color: var(--primary-dark);
+}
+.item-debt-badge.none { background: var(--bg2); color: var(--text3); }
+
+.add-item-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 12px;
+  background: transparent;
+  border: 1.5px dashed var(--border2);
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-size: 14px; font-weight: 600; color: var(--text3);
+  cursor: pointer; transition: all 0.2s;
+  margin-bottom: 20px;
+}
+.add-item-btn:active { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+
+/* Split badge */
+.split-selector {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.split-chip {
+  padding: 7px 14px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  font-size: 12px; font-weight: 600; color: var(--text2);
+  cursor: pointer; transition: all 0.2s;
+}
+.split-chip.active {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary-dark);
+}
+
+/* ── ════════════════════════════════════════
+   SCREEN: DETALLE DE GASTO
+   ════════════════════════════════════════ ── */
+.expense-hero {
+  margin: 0 20px 20px;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+.expense-hero-merchant { font-size: 20px; font-weight: 700; color: var(--text1); margin-bottom: 4px; }
+.expense-hero-date { font-size: 13px; color: var(--text3); margin-bottom: 16px; }
+.expense-hero-total { font-size: 32px; font-weight: 700; color: var(--text1); font-family: var(--mono); }
+.expense-hero-currency { font-size: 14px; color: var(--text3); font-weight: 400; margin-left: 4px; }
+.expense-hero-row {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 16px; padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.expense-payer { display: flex; align-items: center; gap: 8px; }
+.expense-payer-avatar { font-size: 24px; }
+.expense-payer-info {}
+.expense-payer-label { font-size: 11px; color: var(--text3); }
+.expense-payer-name { font-size: 14px; font-weight: 600; color: var(--text1); }
+.expense-debt-pill {
+  padding: 6px 14px;
+  background: var(--primary-light);
+  border-radius: 20px;
+  font-size: 13px; font-weight: 700;
+  color: var(--primary-dark);
+}
+
+.items-detail { padding: 0 20px; margin-bottom: 20px; }
+.item-detail-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.item-detail-row:last-child { border-bottom: none; }
+.item-detail-num {
+  width: 28px; height: 28px;
+  background: var(--bg2);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: var(--text3);
+  flex-shrink: 0; margin-top: 2px;
+}
+.item-detail-info { flex: 1; }
+.item-detail-name { font-size: 15px; font-weight: 600; color: var(--text1); margin-bottom: 2px; }
+.item-detail-qty { font-size: 12px; color: var(--text3); }
+.item-detail-right { text-align: right; }
+.item-detail-amount { font-size: 15px; font-weight: 700; color: var(--text1); font-family: var(--mono); }
+.item-detail-debt { font-size: 11px; color: var(--primary); font-weight: 600; margin-top: 2px; }
+.item-detail-debt.none { color: var(--text3); }
+
+/* ── ════════════════════════════════════════
+   SCREEN: HISTORIAL
+   ════════════════════════════════════════ ── */
+.history-summary {
+  margin: 0 20px 20px;
+  display: flex; gap: 12px;
+}
+.history-stat {
+  flex: 1;
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+.history-stat-label { font-size: 11px; color: var(--text3); font-weight: 600; letter-spacing: 0.3px; margin-bottom: 4px; }
+.history-stat-value { font-size: 20px; font-weight: 700; color: var(--text1); font-family: var(--mono); }
+.history-stat-value.green { color: var(--primary); }
+.history-stat-value.red   { color: var(--danger); }
+
+.month-chip-row {
+  display: flex; gap: 8px; padding: 0 20px 16px; overflow-x: auto;
+  scrollbar-width: none;
+}
+.month-chip {
+  padding: 8px 16px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  font-size: 13px; font-weight: 600; color: var(--text3);
+  white-space: nowrap; cursor: pointer; flex-shrink: 0;
+  transition: all 0.2s;
+}
+.month-chip.active {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary-dark);
+}
+
+/* ── ════════════════════════════════════════
+   SCREEN: REGISTRAR PAGO
+   ════════════════════════════════════════ ── */
+.pay-summary {
+  margin: 0 20px 24px;
+  background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  text-align: center;
+}
+[data-theme="dark"] .pay-summary {
+  background: linear-gradient(135deg, #0B1120 0%, #1A2235 100%);
+  border: 1px solid var(--border);
+}
+.pay-summary-label { font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 6px; letter-spacing: 0.5px; }
+.pay-summary-amount { font-size: 40px; font-weight: 700; color: #fff; font-family: var(--mono); margin-bottom: 4px; }
+.pay-summary-sub { font-size: 13px; color: rgba(255,255,255,0.5); }
+.pay-arrow {
+  display: flex; align-items: center; gap: 12px;
+  justify-content: center; margin-top: 20px;
+}
+.pay-user {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.pay-user-avatar { font-size: 32px; }
+.pay-user-name { font-size: 12px; color: rgba(255,255,255,0.6); font-weight: 600; }
+.pay-user-role { font-size: 10px; color: rgba(255,255,255,0.35); }
+.pay-arrow-icon { font-size: 20px; color: rgba(255,255,255,0.3); }
+
+.btn-secondary {
+  width: 100%; height: 54px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-size: 16px; font-weight: 600;
+  color: var(--text2); cursor: pointer;
+  transition: all 0.15s;
+  margin-top: 12px;
+}
+.btn-secondary:active { background: var(--bg2); }
+
+/* ── Animations ── */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(16px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 0; }
+
+/* ── Outer layout ── */
+.outer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+  min-height: 100vh;
+  padding: 40px 20px;
+}
+
+/* OCR scanning overlay */
+.ocr-scanning {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.9);
+  display: none;
+  flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 200; gap: 16px;
+}
+.ocr-scanning.active { display: flex; }
+.scan-frame {
+  width: 260px; height: 180px;
+  border: 2px solid #22C55E;
+  border-radius: 12px;
+  position: relative;
+}
+.scan-line {
+  position: absolute;
+  left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, #22C55E, transparent);
+  animation: scanMove 1.5s ease-in-out infinite;
+}
+@keyframes scanMove {
+  0%   { top: 0; }
+  50%  { top: calc(100% - 2px); }
+  100% { top: 0; }
+}
+.scan-label { color: #fff; font-size: 14px; font-weight: 600; }
+.scan-sub { color: rgba(255,255,255,0.5); font-size: 12px; }
+
+/* Success toast */
+.toast {
+  position: absolute;
+  bottom: 100px; left: 20px; right: 20px;
+  background: var(--text1);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 14px; font-weight: 600; color: var(--bg);
+  z-index: 300;
+  transform: translateY(80px); opacity: 0;
+  transition: all 0.3s cubic-bezier(.4,0,.2,1);
+  pointer-events: none;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .outer { padding: 0; }
+  .phone-shell { border-radius: 0; width: 100vw; height: 100vh; box-shadow: none; }
+  .controls { display: none; }
+  body { background: var(--bg); }
+}
+</style>
+</head>
+<body>
+<div class="outer">
+
+  <!-- Phone shell -->
+  <div class="phone-shell" id="phone">
+    <div class="notch"></div>
+    <div id="app" data-theme="light">
+
+      <!-- OCR Scanning overlay -->
+      <div class="ocr-scanning" id="ocr-overlay">
+        <div class="scan-frame"><div class="scan-line"></div></div>
+        <div class="scan-label">Escaneando factura...</div>
+        <div class="scan-sub">Detectando ítems y precios</div>
+      </div>
+
+      <!-- Toast -->
+      <div class="toast" id="toast">✅ Gasto guardado exitosamente</div>
+
+      <!-- ═══════════════════════════════════════
+           SCREEN: LOGIN
+      ════════════════════════════════════════ -->
+      <div class="screen active" id="screen-login">
+        <div class="login-blob-1"></div>
+        <div class="login-blob-2"></div>
+        <div style="height:50px;flex-shrink:0;"></div>
+        <div class="login-logo-wrap">
+          <div class="login-logo">💰</div>
+          <div class="login-app-name">GastosApp</div>
+          <div class="login-tagline">Gastos compartidos, sin complicaciones</div>
+        </div>
+        <div class="login-card">
+          <div class="login-card-title">Bienvenido de vuelta</div>
+          <div class="login-card-sub">Inicia sesión para continuar</div>
+          <div class="field-label">Correo electrónico</div>
+          <input class="field-input" type="email" placeholder="tu@correo.com" value="jose@gastosapp.com">
+          <div class="field-label">Contraseña</div>
+          <input class="field-input" type="password" placeholder="••••••••" value="password">
+          <button class="btn-primary" onclick="navigate('screen-home')">Iniciar sesión</button>
+        </div>
+        <div class="login-footer">
+          <span>🔒 Solo tú y tu familia tienen acceso</span>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════
+           SCREEN: HOME / BALANCE
+      ════════════════════════════════════════ -->
+      <div class="screen" id="screen-home">
+        <div class="status-bar">
+          <span class="status-time">9:41</span>
+          <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+        </div>
+        <div class="content">
+          <div class="home-header">
+            <div class="home-greeting">Buenos días,</div>
+            <div class="home-name">José Enrique 👋</div>
+          </div>
+
+          <!-- Balance card -->
+          <div class="balance-card">
+            <div class="balance-label">BALANCE ACTUAL</div>
+            <div class="balance-amount">Q 245.50</div>
+            <div class="balance-sub">Tu mamá te debe este mes</div>
+            <div class="balance-currencies">
+              <div class="currency-chip"><span>GTQ</span>Q 245.50</div>
+              <div class="currency-chip"><span>USD</span>$12.50</div>
+            </div>
+          </div>
+
+          <!-- Quick actions -->
+          <div class="quick-actions">
+            <div class="quick-action" onclick="navigate('screen-add-expense')">
+              <div class="qa-icon">📸</div>
+              <div class="qa-label">Escanear factura</div>
+            </div>
+            <div class="quick-action" onclick="navigate('screen-add-manual')">
+              <div class="qa-icon">✏️</div>
+              <div class="qa-label">Gasto manual</div>
+            </div>
+            <div class="quick-action" onclick="navigate('screen-pay')">
+              <div class="qa-icon">💸</div>
+              <div class="qa-label">Registrar pago</div>
+            </div>
+          </div>
+
+          <!-- Movements -->
+          <div class="section-header">
+            <div class="section-title">Movimientos</div>
+            <div class="section-link" onclick="navigate('screen-history')">Ver historial</div>
+          </div>
+
+          <div class="period-divider">Marzo 2026</div>
+
+          <div class="movement-item" onclick="navigate('screen-expense-detail')">
+            <div class="movement-icon green">🛒</div>
+            <div class="movement-info">
+              <div class="movement-name">Supermercado La Torre</div>
+              <div class="movement-meta">Hoy · 5 ítems</div>
+            </div>
+            <div class="movement-right">
+              <div class="movement-amount positive">+Q 85.00</div>
+              <div class="movement-period">te debe</div>
+            </div>
+          </div>
+
+          <div class="movement-item">
+            <div class="movement-icon red">🍽️</div>
+            <div class="movement-info">
+              <div class="movement-name">Restaurante Hacienda</div>
+              <div class="movement-meta">Ayer · Mamá pagó</div>
+            </div>
+            <div class="movement-right">
+              <div class="movement-amount negative">-Q 120.00</div>
+              <div class="movement-period">tú le debes</div>
+            </div>
+          </div>
+
+          <div class="movement-item">
+            <div class="movement-icon green">💊</div>
+            <div class="movement-info">
+              <div class="movement-name">Farmacia Meykos</div>
+              <div class="movement-meta">26 mar · 3 ítems</div>
+            </div>
+            <div class="movement-right">
+              <div class="movement-amount positive">+Q 180.00</div>
+              <div class="movement-period">te debe</div>
+            </div>
+          </div>
+
+          <div class="movement-item">
+            <div class="movement-icon gray">💸</div>
+            <div class="movement-info">
+              <div class="movement-name">Pago de mamá</div>
+              <div class="movement-meta">20 mar · Transferencia</div>
+            </div>
+            <div class="movement-right">
+              <div class="movement-amount neutral">-Q 200.00</div>
+              <div class="movement-period">saldado</div>
+            </div>
+          </div>
+
+          <div class="period-divider">Febrero 2026 (cerrado)</div>
+
+          <div class="movement-item">
+            <div class="movement-icon gray">📦</div>
+            <div class="movement-info">
+              <div class="movement-name">Balance arrastrado</div>
+              <div class="movement-meta">Arrastre de feb → mar</div>
+            </div>
+            <div class="movement-right">
+              <div class="movement-amount positive">+Q 100.50</div>
+              <div class="movement-period">arrastre</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom nav -->
+        <div class="bottom-nav">
+          <div class="nav-item active">
+            <div class="nav-icon">🏠</div>
+            <div class="nav-label">Inicio</div>
+          </div>
+          <div class="nav-item" onclick="navigate('screen-add-expense')">
+            <div class="fab">＋</div>
+          </div>
+          <div class="nav-item" onclick="navigate('screen-history')">
+            <div class="nav-icon">📋</div>
+            <div class="nav-label">Historial</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════
+           SCREEN: AGREGAR GASTO (OCR)
+      ════════════════════════════════════════ -->
+      <div class="screen" id="screen-add-expense">
+        <div class="status-bar"><span class="status-time">9:41</span></div>
+        <div class="top-nav">
+          <div class="back-btn" onclick="goBack()">←</div>
+          <div class="nav-title">Agregar gasto</div>
+        </div>
+
+        <div class="content">
+          <!-- Method selector -->
+          <div class="method-selector">
+            <div class="method-option active" id="method-ocr" onclick="setMethod('ocr')">📸 Escanear</div>
+            <div class="method-option" id="method-manual" onclick="setMethod('manual'); navigate('screen-add-manual')">✏️ Manual</div>
+          </div>
+
+          <!-- OCR zone -->
+          <div class="ocr-zone" onclick="startOCR()">
+            <div class="ocr-zone-icon">📷</div>
+            <div class="ocr-zone-label">Toca para tomar foto</div>
+            <div class="ocr-zone-sub">o arrastra una imagen aquí</div>
+          </div>
+
+          <!-- Quién pagó -->
+          <div class="form-section">
+            <div class="field-label">¿Quién pagó?</div>
+            <div class="payer-selector">
+              <div class="payer-option active" onclick="selectPayer(this)">
+                <span class="payer-avatar">👨‍💻</span>
+                <span class="payer-name">José Enrique</span>
+              </div>
+              <div class="payer-option" onclick="selectPayer(this)">
+                <span class="payer-avatar">👩</span>
+                <span class="payer-name">Mamá</span>
+              </div>
+              <div class="payer-option" onclick="selectPayer(this)">
+                <span class="payer-avatar">👥</span>
+                <span class="payer-name">Ambos</span>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <div class="field-label">Comercio</div>
+                <input class="field-input" placeholder="Nombre del lugar" style="margin-bottom:0">
+              </div>
+              <div class="form-field">
+                <div class="field-label">Moneda</div>
+                <select class="field-input" style="margin-bottom:0">
+                  <option>GTQ</option>
+                  <option>USD</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding: 0 20px; margin-bottom: 8px;">
+            <div class="section-title" style="margin-bottom:12px;">Ítems</div>
+            <div style="color: var(--text3); font-size:13px; text-align:center; padding: 20px 0;">
+              Escanea una factura o agrégalos manualmente
+            </div>
+          </div>
+
+          <div class="items-list">
+            <div class="add-item-btn" onclick="navigate('screen-add-item')">
+              ＋ Agregar ítem manualmente
+            </div>
+          </div>
+
+          <div class="form-section">
+            <button class="btn-primary" onclick="saveExpense()">Guardar gasto</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════
+           SCREEN: GASTO CON ÍTEMS (después de OCR)
+      ════════════════════════════════════════ -->
+      <div class="screen" id="screen-add-manual">
+        <div class="status-bar"><span class="status-time">9:41</span></div>
+        <div class="top-nav">
+          <div class="back-btn" onclick="goBack()">←</div>
+          <div class="nav-title">Nuevo gasto</div>
+        </div>
+
+        <div class="content">
+          <div class="method-selector">
+            <div class="method-option" id="method-ocr2" onclick="setMethod('ocr'); navigate('screen-add-expense')">📸 Escanear</div>
+            <div class="method-option active" id="method-manual2" onclick="setMethod('manual')">✏️ Manual</div>
+          </div>
+
+          <div class="form-section">
+            <div class="field-label">¿Quién pagó?</div>
+            <div class="payer-selector">
+              <div class="payer-option active" onclick="selectPayer(this)">
+                <span class="payer-avatar">👨‍💻</span>
+                <span class="payer-name">José Enrique</span>
+              </div>
+              <div class="payer-option" onclick="selectPayer(this)">
+                <span class="payer-avatar">👩</span>
+                <span class="payer-name">Mamá</span>
+              </div>
+              <div class="payer-option" onclick="selectPayer(this)">
+                <span class="payer-avatar">👥</span>
+                <span class="payer-name">Ambos</span>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-field">
+                <div class="field-label">Comercio</div>
+                <input class="field-input" placeholder="Ej: Supermercado" value="Supermercado La Torre" style="margin-bottom:0">
+              </div>
+              <div class="form-field">
+                <div class="field-label">Moneda</div>
+                <select class="field-input" style="margin-bottom:0"><option>GTQ</option><option>USD</option></select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ítems con reglas -->
+          <div class="section-header">
+            <div class="section-title">Ítems</div>
+            <div style="font-size:12px;color:var(--text3);">Total: Q 185.00</div>
+          </div>
+
+          <div class="items-list">
+            <div class="item-row">
+              <div class="item-row-info">
+                <div class="item-row-name">Leche Dos Pinos 1L</div>
+                <div class="item-row-meta">2 × Q 18.50</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                <div class="item-row-amount">Q 37.00</div>
+                <div class="item-debt-badge">50% · Q 18.50</div>
+              </div>
+            </div>
+            <div class="item-row">
+              <div class="item-row-info">
+                <div class="item-row-name">Shampoo Pantene</div>
+                <div class="item-row-meta">1 × Q 85.00</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                <div class="item-row-amount">Q 85.00</div>
+                <div class="item-debt-badge">100% · Q 85.00</div>
+              </div>
+            </div>
+            <div class="item-row">
+              <div class="item-row-info">
+                <div class="item-row-name">Pan Bimbo integral</div>
+                <div class="item-row-meta">1 × Q 28.00</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                <div class="item-row-amount">Q 28.00</div>
+                <div class="item-debt-badge none">Solo mío</div>
+              </div>
+            </div>
+            <div class="item-row">
+              <div class="item-row-info">
+                <div class="item-row-name">Jabón líquido</div>
+                <div class="item-row-meta">2 × Q 17.50</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                <div class="item-row-amount">Q 35.00</div>
+                <div class="item-debt-badge">Q 20.00 fijo</div>
+              </div>
+            </div>
+
+            <div class="add-item-btn">＋ Agregar ítem</div>
+          </div>
+
+          <!-- Deuda calculada -->
+          <div style="margin: 0 20px 20px;">
+            <div class="card" style="background: var(--primary-light); border-color: var(--primary);">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                  <div style="font-size:12px;color:var(--primary-dark);font-weight:600;margin-bottom:2px;">DEUDA GENERADA</div>
+                  <div style="font-size:13px;color:var(--text2);">Mamá te deberá</div>
+                </div>
+                <div style="font-size:28px;font-weight:700;color:var(--primary-dark);font-family:var(--mono);">Q 123.50</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <button class="btn-primary" onclick="saveExpense()">Guardar gasto</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════
+           SCREEN: DETALLE DE GASTO
+      ════════════════════════════════════════ -->
+      <div class="screen" id="screen-expense-detail">
+        <div class="status-bar"><span class="status-time">9:41</span></div>
+        <div class="top-nav">
+          <div class="back-btn" onclick="goBack()">←</div>
+          <div class="nav-title">Detalle del gasto</div>
+          <div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--danger);font-size:18px;" onclick="showToast('🗑️ Gasto eliminado')">🗑️</div>
+        </div>
+
+        <div class="content">
+          <div class="expense-hero">
+            <div class="expense-hero-merchant">Supermercado La Torre</div>
+            <div class="expense-hero-date">Hoy, 28 de marzo · 10:23 AM</div>
+            <div>
+              <span class="expense-hero-total">Q 185.00</span>
+              <span class="expense-hero-currency">GTQ</span>
+            </div>
+            <div class="expense-hero-row">
+              <div class="expense-payer">
+                <div class="expense-payer-avatar">👨‍💻</div>
+                <div class="expense-payer-info">
+                  <div class="expense-payer-label">Pagado por</div>
+                  <div class="expense-payer-name">José Enrique</div>
+                </div>
+              </div>
+              <div class="expense-debt-pill">Mamá debe Q 123.50</div>
+            </div>
+          </div>
+
+          <div class="section-header">
+            <div class="section-title">Ítems</div>
+            <div style="font-size:12px;color:var(--text3);">4 ítems</div>
+          </div>
+
+          <div class="items-detail">
+            <div class="item-detail-row">
+              <div class="item-detail-num">1</div>
+              <div class="item-detail-info">
+                <div class="item-detail-name">Leche Dos Pinos 1L</div>
+                <div class="item-detail-qty">2 unidades × Q 18.50</div>
+              </div>
+              <div class="item-detail-right">
+                <div class="item-detail-amount">Q 37.00</div>
+                <div class="item-detail-debt">50% → Q 18.50</div>
+              </div>
+            </div>
+            <div class="item-detail-row">
+              <div class="item-detail-num">2</div>
+              <div class="item-detail-info">
+                <div class="item-detail-name">Shampoo Pantene</div>
+                <div class="item-detail-qty">1 unidad × Q 85.00</div>
+              </div>
+              <div class="item-detail-right">
+                <div class="item-detail-amount">Q 85.00</div>
+                <div class="item-detail-debt">100% → Q 85.00</div>
+              </div>
+            </div>
+            <div class="item-detail-row">
+              <div class="item-detail-num">3</div>
+              <div class="item-detail-info">
+                <div class="item-detail-name">Pan Bimbo integral</div>
+                <div class="item-detail-qty">1 unidad × Q 28.00</div>
+              </div>
+              <div class="item-detail-right">
+                <div class="item-detail-amount">Q 28.00</div>
+                <div class="item-detail-debt none">Solo mío</div>
+              </div>
+            </div>
+            <div class="item-detail-row">
+              <div class="item-detail-num">4</div>
+              <div class="item-detail-info">
+                <div class="item-detail-name">Jabón líquido</div>
+                <div class="item-detail-qty">2 unidades × Q 17.50</div>
+              </div>
+              <div class="item-detail-right">
+                <div class="item-detail-amount">Q 35.00</div>
+                <div class="item-detail-debt">Fijo → Q 20.00</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Resumen deuda -->
+          <div style="margin: 0 20px 20px;">
+            <div class="card">
+              <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+                <span style="font-size:13px;color:var(--text3);">Total pagado</span>
+                <span style="font-size:13px;font-weight:700;font-family:var(--mono);">Q 185.00</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+                <span style="font-size:13px;color:var(--text3);">Tu parte</span>
+                <span style="font-size:13px;font-weight:700;font-family:var(--mono);">Q 61.50</span>
+              </div>
+              <div style="height:1px;background:var(--border);margin-bottom:10px;"></div>
+              <div style="display:flex;justify-content:space-between;">
+                <span style="font-size:14px;font-weight:700;color:var(--primary);">Mamá te debe</span>
+                <span style="font-size:16px;font-weight:700;color:var(--primary);font-family:var(--mono);">Q 123.50</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════
+           SCREEN: HISTORIAL
+      ════════════════════════════════════════ -->
+      <div class="screen" id="screen-history">
+        <div class="status-bar"><span class="status-time">9:41</span></div>
+        <div class="top-nav">
+          <div class="back-btn" onclick="goBack()">←</div>
+          <div class="nav-title">Historial</div>
+        </div>
+
+        <div class="content">
+          <!-- Month chips -->
+          <div class="month-chip-row">
+            <div class="month-chip active">Mar 2026</div>
+            <div class="month-chip">Feb 2026</div>
+            <div class="month-chip">Ene 2026</div>
+            <div class="month-chip">Dic 2025</div>
+          </div>
+
+          <!-- Stats -->
+          <div class="history-summary">
+            <div class="history-stat">
+              <div class="history-stat-label">GASTADO</div>
+              <div class="history-stat-value">Q 840</div>
+            </div>
+            <div class="history-stat">
+              <div class="history-stat-label">TE DEBEN</div>
+              <div class="history-stat-value green">Q 245</div>
+            </div>
+            <div class="history-stat">
+              <div class="history-stat-label">DEBES</div>
+              <div class="history-stat-value red">Q 120</div>
+            </div>
+          </div>
+
+          <div class="period-divider">Semana 4 · 24–28 mar</div>
+
+          <div class="movement-item" onclick="navigate('screen-expense-detail')">
+            <div class="movement-icon green">🛒</div>
+            <div class="movement-info">
+              <div class="movement-name">Supermercado La Torre</div>
+              <div class="movement-meta">Hoy · Q 185.00 · 4 ítems</div>
+            </div>
+            <div class="movement-right">
+              <div class="movement-amount positive">+Q 123.50</div>
+            </div>
+          </div>
+          <div class="movement-item">
+            <div class="movement-icon red">🍽️</div>
+            <div class="movement-info">
+              <div class="movement-name">Restaurante Hacienda</div>
+              <div class="movement-meta">Ayer · Q 240.00 · Mamá pagó</div>
+            </div>
+            <div class="movement-right">
+              <div class="movement-amount negative">-Q 120.00</div>
+            </div>
+          </div>
+
+          <div class="period-divider">Semana 3 · 17–23 mar</div>
+
+          <div class="movement-item">
+            <div class="movement-icon green">💊</div>
+            <div class="movement-info">
+              <div class="movement-name">Farmacia Meykos</div>
+              <div class="movement-meta">20 mar · Q 180.00 · 3 ítems</div>
+            </div>
+            <div class="movement-right">
+              <div class="movement-amount positive">+Q 180.00</div>
+            </div>
+          </div>
+          <div class="movement-item">
+            <div class="movement-icon gray">💸</div>
+            <div class="movement-info">
+              <div class="movement-name">Pago de mamá</div>
+              <div class="movement-meta">20 mar · Transferencia</div>
+            </div>
+            <div class="movement-right">
+              <div class="movement-amount neutral">Q 200.00</div>
+            </div>
+          </div>
+
+          <div class="period-divider">Semana 2 · 10–16 mar</div>
+
+          <div class="movement-item">
+            <div class="movement-icon green">⚡</div>
+            <div class="movement-info">
+              <div class="movement-name">Pago electricidad</div>
+              <div class="movement-meta">15 mar · Q 275.00</div>
+            </div>
+            <div class="movement-right">
+              <div class="movement-amount positive">+Q 137.50</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════
+           SCREEN: REGISTRAR PAGO
+      ════════════════════════════════════════ -->
+      <div class="screen" id="screen-pay">
+        <div class="status-bar"><span class="status-time">9:41</span></div>
+        <div class="top-nav">
+          <div class="back-btn" onclick="goBack()">←</div>
+          <div class="nav-title">Registrar pago</div>
+        </div>
+
+        <div class="content">
+          <div class="pay-summary">
+            <div class="pay-summary-label">DEUDA PENDIENTE</div>
+            <div class="pay-summary-amount">Q 245.50</div>
+            <div class="pay-summary-sub">Mamá te debe este mes</div>
+            <div class="pay-arrow">
+              <div class="pay-user">
+                <div class="pay-user-avatar">👩</div>
+                <div class="pay-user-name">Mamá</div>
+                <div class="pay-user-role">paga</div>
+              </div>
+              <div class="pay-arrow-icon">→</div>
+              <div class="pay-user">
+                <div class="pay-user-avatar">👨‍💻</div>
+                <div class="pay-user-name">José</div>
+                <div class="pay-user-role">recibe</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="field-label">Monto del pago</div>
+            <input class="field-input" type="number" value="245.50" placeholder="0.00">
+
+            <div class="field-label">Moneda</div>
+            <div class="split-selector" style="margin-bottom:16px;">
+              <div class="split-chip active" onclick="selectChip(this)">GTQ</div>
+              <div class="split-chip" onclick="selectChip(this)">USD</div>
+            </div>
+
+            <div class="field-label">Nota (opcional)</div>
+            <input class="field-input" placeholder="Ej: Transferencia Banrural" style="margin-bottom:0">
+          </div>
+
+          <div style="padding: 0 20px; margin-top: 8px;">
+            <div class="card" style="background: var(--primary-light); border-color: var(--primary); margin-bottom:16px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                  <div style="font-size:12px;color:var(--primary-dark);font-weight:600;margin-bottom:2px;">DESPUÉS DEL PAGO</div>
+                  <div style="font-size:13px;color:var(--text2);">Balance quedará en</div>
+                </div>
+                <div style="font-size:26px;font-weight:700;color:var(--primary-dark);font-family:var(--mono);">Q 0.00</div>
+              </div>
+            </div>
+
+            <button class="btn-primary" onclick="saveExpense(); navigate('screen-home')">Confirmar pago</button>
+            <button class="btn-secondary" onclick="goBack()">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /app -->
+  </div><!-- /phone-shell -->
+
+  <!-- Controls -->
+  <div class="controls">
+    <div class="ctrl-label">Pantallas</div>
+    <div class="ctrl-btn active" onclick="navigate('screen-login', this)">🔐 Login</div>
+    <div class="ctrl-btn" onclick="navigate('screen-home', this)">🏠 Balance</div>
+    <div class="ctrl-btn" onclick="navigate('screen-add-expense', this)">📸 Agregar (OCR)</div>
+    <div class="ctrl-btn" onclick="navigate('screen-add-manual', this)">✏️ Agregar (Manual)</div>
+    <div class="ctrl-btn" onclick="navigate('screen-expense-detail', this)">🧾 Detalle gasto</div>
+    <div class="ctrl-btn" onclick="navigate('screen-history', this)">📋 Historial</div>
+    <div class="ctrl-btn" onclick="navigate('screen-pay', this)">💸 Registrar pago</div>
+
+    <div class="ctrl-label">Tema</div>
+    <div class="ctrl-btn" id="theme-btn" onclick="toggleTheme()">🌙 Dark mode</div>
+
+    <div class="ctrl-label">Info</div>
+    <div style="color:rgba(255,255,255,0.3);font-size:11px;line-height:1.6;max-width:160px;">
+      Prototipo navegable.<br>Toca en las pantallas para navegar.
+    </div>
+  </div>
+
+</div><!-- /outer -->
+
+<script>
+  let history = ['screen-login'];
+  let currentScreen = 'screen-login';
+
+  function navigate(id, btn) {
+    if (id === currentScreen) return;
+    const prev = document.getElementById(currentScreen);
+    const next = document.getElementById(id);
+    if (!next) return;
+
+    prev.classList.remove('active');
+    next.classList.add('active');
+    currentScreen = id;
+    history.push(id);
+
+    // Update ctrl buttons
+    if (btn) {
+      document.querySelectorAll('.ctrl-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+  }
+
+  function goBack() {
+    if (history.length <= 1) return;
+    history.pop();
+    const prev = history[history.length - 1];
+    const current = document.getElementById(currentScreen);
+    const target = document.getElementById(prev);
+    current.classList.remove('active');
+    target.classList.add('back', 'active');
+    setTimeout(() => target.classList.remove('back'), 300);
+    currentScreen = prev;
+  }
+
+  function toggleTheme() {
+    const app = document.getElementById('app');
+    const btn = document.getElementById('theme-btn');
+    const isDark = app.getAttribute('data-theme') === 'dark';
+    app.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    btn.textContent = isDark ? '🌙 Dark mode' : '☀️ Light mode';
+  }
+
+  function selectPayer(el) {
+    el.closest('.payer-selector').querySelectorAll('.payer-option').forEach(o => o.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  function selectChip(el) {
+    el.closest('.split-selector').querySelectorAll('.split-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  function setMethod(method) {
+    document.querySelectorAll('.method-option').forEach(o => o.classList.remove('active'));
+  }
+
+  function startOCR() {
+    const overlay = document.getElementById('ocr-overlay');
+    overlay.classList.add('active');
+    setTimeout(() => {
+      overlay.classList.remove('active');
+      navigate('screen-add-manual');
+    }, 2500);
+  }
+
+  function saveExpense() {
+    showToast('✅ Guardado exitosamente');
+    setTimeout(() => navigate('screen-home'), 1200);
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+  }
+</script>
+</body>
+</html>
