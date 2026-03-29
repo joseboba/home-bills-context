@@ -89,6 +89,15 @@ import 'package:home_bills/features/expenses/expenses.dart';
 - Cada carpeta tiene un barrel `<nombre>.dart` que re-exporta todo lo público.
 - Importar siempre desde el barrel del módulo, nunca desde archivos internos directamente.
 
+### Sin setState
+- `setState()` está prohibido. Todo estado va en Riverpod.
+- `ConsumerStatefulWidget` solo para lifecycle: `TextEditingController`, `AnimationController`, `FocusNode`, `GlobalKey`.
+- Estado local de widget (toggle, selección): `@riverpod` auto-dispose en el mismo archivo.
+- Loading se lee del provider: `ref.watch(myProvider).isLoading`.
+
+### AppSpacing
+Siempre `AppSpacing.X` en lugar de números inline. Contenedores responsivos: `context.screenWidth * factor`.
+
 ### Extensiones de contexto
 Usar siempre las extensiones de `build_context_ext.dart` en vez de llamadas directas:
 ```dart
@@ -277,6 +286,9 @@ ImagePicker → MLKit TextRecognizer → texto crudo
 - NO guardar imágenes en DB
 - NO mezclar capas
 - NO usar paquetes no listados en el stack
+- NO `setState()` — todo estado en Riverpod
+- NO `bool _isLoading` local — usar `provider.isLoading`
+- NO valores numéricos de spacing inline — usar `AppSpacing.X`
 - NO `AlertDialog` ni `print`/`debugPrint` para feedback al usuario — usar `context.snackBarX()`
 - NO `ScaffoldMessenger.of(context).showSnackBar(...)` directo — usar extensión de contexto
 - NO `fontSize` hardcodeado fuera del tema

@@ -229,6 +229,30 @@ import 'package:home_bills/features/expenses/expenses.dart';
 - La única excepción son los archivos `part`/`part of` que Dart exige como rutas relativas.
 - Respetar el orden y una línea en blanco entre cada sección.
 
+### Sin setState — solo Riverpod para estado UI
+- **Nunca usar `setState()`** en widgets. Todo estado (visibilidad, loading, selección, toggle) va en un provider Riverpod.
+- Para estado local de un widget (ej: toggle de contraseña), crear un `@riverpod` auto-dispose en el mismo archivo del widget.
+- `ConsumerStatefulWidget` se permite **únicamente** para lifecycle de objetos no-Riverpod: `TextEditingController`, `AnimationController`, `FocusNode`, `GlobalKey`. Nada más.
+- El loading state se lee del provider: `ref.watch(myProvider).isLoading` — nunca un `bool _isLoading` local.
+
+### AppSpacing — sistema de espaciado
+Usar siempre las constantes de `AppSpacing` (`config/utilities/app_spacing.dart`) en lugar de valores numéricos inline:
+```dart
+// Correcto
+const SizedBox(height: AppSpacing.md)
+EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal)
+
+// Incorrecto
+const SizedBox(height: 16)
+EdgeInsets.symmetric(horizontal: 24)
+```
+Para tamaños de contenedores (iconos, avatares, cards) usar valores proporcionales al ancho de pantalla: `context.screenWidth * factor`.
+
+### Regex de validación de email
+```dart
+final emailRegex = RegExp(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$');
+```
+
 ### Dart format y linter — exclusión de archivos generados
 En `analysis_options.yaml`, excluir siempre los archivos autogenerados:
 ```yaml
