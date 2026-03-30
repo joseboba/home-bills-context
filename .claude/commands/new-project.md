@@ -1,3 +1,8 @@
+---
+description: Inicializa el proyecto Flutter GastosApp desde cero con estructura base, configuración y boilerplate completo.
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep
+---
+
 # /new-project
 
 Inicializa el proyecto Flutter de HomeBillsApp desde cero con toda la estructura, configuración y boilerplate base.
@@ -6,6 +11,14 @@ Inicializa el proyecto Flutter de HomeBillsApp desde cero con toda la estructura
 ```
 /new-project
 ```
+
+## Antes de generar código
+
+Este command no requiere argumentos. Antes de ejecutar cualquier paso, verificar:
+
+1. ¿Existe ya un directorio `lib/` con archivos Dart? Ejecutar `ls lib/` para comprobarlo.
+   - Si existe y tiene contenido: preguntar al usuario "Parece que ya hay un proyecto Flutter aquí. ¿Quieres continuar y sobreescribir los archivos base, o prefieres cancelar?"
+   - Si no existe o está vacío: continuar con los pasos siguientes sin preguntar.
 
 ## Lo que genera
 
@@ -25,8 +38,10 @@ Inicializa el proyecto Flutter de HomeBillsApp desde cero con toda la estructura
 ## Instrucciones
 
 1. Leer `CLAUDE.md` completo para contexto y reglas
-2. Leer `.claude/agents/frontend-flutter.md` para convenciones
-3. Leer `docs/architecture/flutter-file-structure.md` para el árbol exacto de carpetas
+2. Leer `.claude/agents/frontend-flutter.md` para convenciones de código y estructura
+3. Leer `.claude/skills/design-system/SKILL.md` para `AppColors`, `AppTextStyles` y `AppTheme`
+4. Leer `.claude/skills/app-snackbar/SKILL.md` para `AppSnackBar` y extensiones de contexto
+5. Leer `docs/architecture/flutter-file-structure.md` para el árbol exacto de carpetas
 
 ### Paso 1 — Crear el proyecto
 ```bash
