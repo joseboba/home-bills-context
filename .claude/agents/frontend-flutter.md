@@ -168,6 +168,9 @@ class ExpenseListNotifier extends _$ExpenseListNotifier {
 }
 ```
 
+**Regla de ubicación**: todo provider, sin excepción, vive en `presentation/providers/` — incluyendo estado local de un solo widget (toggle, selección, tab). Nunca definir `@riverpod` dentro de un screen o widget.
+Ver skill `riverpod-provider` para patrones completos y ejemplos.
+
 ### GoRouter con auth guard
 ```dart
 redirect: (ctx, state) {
@@ -278,6 +281,7 @@ ImagePicker → MLKit TextRecognizer → texto crudo
 
 ## Prohibiciones
 
+- NO `@riverpod` en screens ni widgets — todos los providers van en `presentation/providers/`
 - NO Provider, GetX, BLoC — solo Riverpod
 - NO Navigator.push — solo GoRouter
 - NO strings hardcodeados de rutas — usar AppRoutes
